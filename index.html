@@ -91,6 +91,17 @@
 <div id="clickCount">已点击云朵：0次</div>
 <script>
     const quotes = [
+        "让时间暂时静止。",
+        "深呼吸，把烦恼都吐出去。",
+        "此刻，允许自己什么都不做。",
+        "放空大脑，感受此刻的宁静。",
+        "试试与自己独处。",
+        "让一切顺其自然。",
+        "有时候也可以放慢脚步。",
+        "感受微风拂过。",
+        "忘记焦虑，专注当下。",
+        "这里可以是你安静的角落。",
+        "这里或许拥有无限的可能。",
         "今天不必思考万物。",
         "让脑子在云朵里软化一会儿。",
         "没有意义，也是意义。",
@@ -239,8 +250,8 @@
         let isOverlapping;
 
         do {
-            const safeMarginX = window.innerWidth * 0.2; // 保证 20% 的安全边距
-            const safeMarginY = window.innerHeight * 0.2; // 保证 20% 的安全边距
+            const safeMarginX = window.innerWidth * 0.2;
+            const safeMarginY = window.innerHeight * 0.2;
             newX = Math.random() * (window.innerWidth - safeMarginX * 2) + safeMarginX;
             newY = Math.random() * (window.innerHeight - safeMarginY * 2) + safeMarginY;
             isOverlapping = false;
