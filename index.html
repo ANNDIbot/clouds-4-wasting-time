@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D 蓬松云朵发呆机</title>
+    <title>云朵发呆机</title>
     <style>
         body {
             margin: 0;
@@ -25,6 +25,7 @@
             transition: transform 0.3s ease, opacity 1s ease;
             cursor: grab;
             animation: float 10s ease-in-out infinite;
+            will-change: transform, opacity, filter, border-radius;
         }
 
         @keyframes float {
@@ -52,7 +53,7 @@
         }
 
         .smoke-effect {
-            animation: smokeEffect 2s ease-out forwards;
+            animation: smokeEffect 2s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
         }
 
         @keyframes smokeEffect {
@@ -62,25 +63,19 @@
                 filter: blur(0.5vw);
                 border-radius: 50%;
             }
-            50% {
-                transform: scale(1.2);
-                opacity: 0.7;
-                filter: blur(1vw);
-                border-radius: 25%;
-            }
             100% {
                 transform: scale(2);
                 opacity: 0;
-                filter: blur(1.5vw);
+                filter: blur(2vw);
                 border-radius: 0%;
             }
         }
 
         #clickCount {
             position: absolute;
-            bottom: 2vw;
-            right: 2vw;
-            font-size: 2vw;
+            bottom: 10%; /* 从下往上 10% */
+            right: 20%; /* 从右往左 20% */
+            font-size: 3vw; /* 增大一号 */
             color: gray;
         }
     </style>
