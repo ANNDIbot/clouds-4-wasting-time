@@ -111,8 +111,10 @@
     let quoteTimeout;
     const clouds = [];
     const displayedQuotes = [];
-    let clickCount = parseInt(localStorage.getItem('clickCount')) || 0;
+    let clickCount = 0; // 初始计数为0
 
+    // 页面加载时重置计数和localStorage
+    localStorage.setItem('clickCount', 0);
     clickCountElement.innerText = `已点击云朵：${clickCount}次`;
 
     function showQuoteText(text) {
