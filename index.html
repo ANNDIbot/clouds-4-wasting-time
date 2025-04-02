@@ -20,7 +20,7 @@
             height: 20vw;
             background: radial-gradient(circle at 50% 50%, #fff, #f0f0f0);
             border-radius: 50%;
-            box-shadow: 
+            box-shadow:
                 2vw 1vw 1vw rgba(0, 0, 0, 0.1),
                 -1vw -0.5vw 0.5vw rgba(255, 255, 255, 0.5);
             filter: blur(0.5vw);
@@ -132,7 +132,7 @@
         cloud.className = 'cloud';
         cloud.style.left = `${x - 15}px`;
         cloud.style.top = `${y - 10}px`;
-        
+
         const scale = 0.8 + Math.random() * 0.4;
         cloud.style.transform = `scale(${scale})`;
 
@@ -184,27 +184,25 @@
             e.preventDefault();
             startDrag(e.touches[0].clientX, e.touches[0].clientY);
         }, { passive: false });
-        
+
         document.addEventListener('touchmove', (e) => {
             e.preventDefault();
             moveDrag(e.touches[0].clientX, e.touches[0].clientY);
         }, { passive: false });
-        
+
         document.addEventListener('touchend', endDrag);
     }
 
     function setupCloudClick(cloud) {
         const handleClick = (e) => {
-            e.stopPropagation(); // 防止事件冒泡
-            
+            e.stopPropagation();
             if (cloud.dataset.animating === 'true') return;
             cloud.dataset.animating = 'true';
-            
-            // 强制重置动画
+
             cloud.style.animation = 'none';
-            void cloud.offsetWidth; // 触发重绘
+            void cloud.offsetWidth;
             cloud.classList.add('smoke-effect');
-            
+
             if (navigator.vibrate) navigator.vibrate(30);
 
             let randomQuote;
@@ -219,19 +217,20 @@
                 displayedQuotes.shift();
             }
 
-            // 创建新云朵
             setTimeout(createNewCloud, 300);
 
-            // 动画结束后移除
             const removeCloud = () => {
                 cloud.remove();
                 const index = clouds.indexOf(cloud);
                 if (index > -1) clouds.splice(index, 1);
             };
-            
-            // 双重保险：动画结束和超时移除
+
             cloud.addEventListener('animationend', removeCloud, { once: true });
-            setTimeout(removeCloud, 2000); // 最大等待时间
+            setTimeout(removeCloud, 2000);
+
+            clickCount++;
+            clickCountElement.innerText = `已点击云朵：${clickCount}次`;
+            localStorage.setItem('clickCount', clickCount);
         };
 
         cloud.addEventListener('click', handleClick);
@@ -251,19 +250,19 @@
 
             for (const cloud of clouds) {
                 if (!cloud.isConnected) continue;
-                
+
                 const rect1 = { left: newX, top: newY, width: 150, height: 100 };
                 const rect2 = cloud.getBoundingClientRect();
 
-                if (rect1.left < rect2.right && 
+                if (rect1.left < rect2.right &&
                     rect1.left + rect1.width > rect2.left &&
-                    rect1.top < rect2.bottom && 
+                    rect1.top < rect2.bottom &&
                     rect1.top + rect1.height > rect2.top) {
                     isOverlapping = true;
                     break;
                 }
             }
-            
+
             if (++attempts >= maxAttempts) {
                 newX = attempts % 2 === 0 ? 20 : window.innerWidth - 180;
                 newY = attempts % 3 === 0 ? 20 : window.innerHeight - 120;
@@ -273,7 +272,7 @@
 
         const newCloud = createCloud(newX, newY);
         newCloud.style.opacity = '0';
-        
+
         let opacity = 0;
         const fadeIn = () => {
             opacity += 0.05;
@@ -286,24 +285,22 @@
     }
 
     function initClouds() {
-        // 初始创建3个不重叠的云朵
         const positions = [
             { x: window.innerWidth * 0.2, y: window.innerHeight * 0.3 },
             { x: window.innerWidth * 0.6, y: window.innerHeight * 0.5 },
             { x: window.innerWidth * 0.4, y: window.innerHeight * 0.7 }
         ];
-        
+
         positions.forEach(pos => {
             createCloud(pos.x, pos.y);
         });
-        
-        // 点击空白处创建新云朵
+
         document.addEventListener('click', (e) => {
             if (e.target === document.body) {
                 createCloud(e.clientX, e.clientY);
             }
         });
-        
+
         document.addEventListener('touchend', (e) => {
             if (e.target === document.body && e.changedTouches) {
                 createCloud(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
