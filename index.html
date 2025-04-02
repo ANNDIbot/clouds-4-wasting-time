@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 蓬松云朵发呆机</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #87CEEB, #E0F2F7);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .cloud {
+            position: absolute;
+            width: 30vw;
+            height: 20vw;
+            background: radial-gradient(circle at 50% 50%, #fff, #f0f0f0);
+            border-radius: 50%;
+            box-shadow: 2vw 1vw 1vw rgba(0, 0, 0, 0.1),
+            -1vw -0.5vw 0.5vw rgba(255, 255, 255, 0.5);
+            filter: blur(0.5vw);
+            transition: transform 0.3s ease, opacity 1s ease;
+            cursor: grab;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-1.5vw);
+            }
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        .quote {
+            position: absolute;
+            top: 10%;
+            width: 100%;
+            text-align: center;
+            font-size: 4vw;
+            color: #444;
+            opacity: 0;
+            transition: opacity 1s;
+            pointer-events: none;
+        }
+
+        .smoke-effect {
+            animation: smokeEffect 2s ease-out forwards;
+        }
+
+        @keyframes smokeEffect {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+                filter: blur(0.5vw);
+                border-radius: 50%;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+                filter: blur(1vw);
+                border-radius: 25%;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+                filter: blur(1.5vw);
+                border-radius: 0%;
+            }
+        }
+
+        #clickCount {
+            position: absolute;
+            bottom: 2vw;
+            right: 2vw;
+            font-size: 2vw;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+<div class="quote" id="quote"></div>
+<div id="clickCount">已点击云朵：0次</div>
+<script>
+    const quotes = [
+        "今天不必思考万物。",
+        "让脑子在云朵里软化一会儿。",
+        "没有意义，也是意义。",
+        "暂停世界几分钟。",
+        "慢一点，再慢一点。",
+        "想象思绪正在变成一朵飞浮的云。",
+        "没有目标也能存在。",
+        "此刻适合飞着。",
+        "在这里，没有人催你。",
+        "轻轻感受你的呼吸。",
+    ];
+
+    const quoteElement = document.getElementById('quote');
+    const clickCountElement = document.getElementById('clickCount');
+    let quoteTimeout;
+    const clouds = [];
+    const displayedQuotes = [];
+    let clickCount = parseInt(localStorage.getItem('clickCount')) || 0;
+
+    clickCountElement.innerText = `已点击云朵：${clickCount}次`;
+
+    function showQuoteText(text) {
+        clearTimeout(quoteTimeout);
+        quoteElement.style.opacity = 0;
+        setTimeout(() => {
+            quoteElement.innerText = text;
+            quoteElement.style.opacity = 1;
+            quoteTimeout = setTimeout(() => {
+                quoteElement.style.opacity = 0;
+            }, 3000);
+        }, 300);
+    }
+
+    function createCloud(x, y) {
+        const cloud = document.createElement('div');
+        cloud.className = 'cloud';
+        cloud.style.left = x + 'px';
+        cloud.style.top = y + 'px';
+
+        setupCloudDrag(cloud);
+        setupCloudClick(cloud);
+
+        document.body.appendChild(cloud);
+        clouds.push(cloud);
+    }
+
+    function setupCloudDrag(cloud) {
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        cloud.addEventListener('mousedown', e => {
+            isDragging = true;
+            offsetX = e.offsetX;
+            offsetY = e.offsetY;
+        });
+
+        document.addEventListener('mousemove', e => {
+            if (isDragging) {
+                const newX = Math.min(window.innerWidth - 160, Math.max(0, e.pageX - offsetX));
+                const newY = Math.min(window.innerHeight - 100, Math.max(0, e.pageY - offsetY));
+                cloud.style.left = newX + 'px';
+                cloud.style.top = newY + 'px';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+    }
+
+    function setupCloudClick(cloud) {
+        cloud.addEventListener('click', () => {
+            cloud.classList.add('smoke-effect');
+            navigator.vibrate && navigator.vibrate(50);
+
+            let randomQuote;
+            do {
+                randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+            } while (displayedQuotes.includes(randomQuote));
+
+            showQuoteText(randomQuote);
+            displayedQuotes.push(randomQuote);
+
+            if (displayedQuotes.length >= 3) {
+                displayedQuotes.length = 0;
+            }
+
+            createNewCloud();
+
+            cloud.addEventListener('animationend', () => {
+                cloud.remove();
+                clouds.splice(clouds.indexOf(cloud), 1);
+            });
+
+            clickCount++;
+            clickCountElement.innerText = `已点击云朵：${clickCount}次`;
+            localStorage.setItem('clickCount', clickCount);
+        });
+    }
+
+    function createNewCloud() {
+        let newX, newY;
+        let isOverlapping;
+
+        do {
+            newX = Math.random() * (window.innerWidth - 200);
+            newY = Math.random() * (window.innerHeight - 200);
+            isOverlapping = false;
+
+            for (const cloud of clouds) {
+                const rect1 = { left: newX, top: newY, width: 150, height: 100 };
+                const rect2 = cloud.getBoundingClientRect();
+
+                if (rect1.left < rect2.right && rect1.left + rect1.width > rect2.left &&
+                    rect1.top < rect2.bottom && rect1.top + rect1.height > rect2.top) {
+                    isOverlapping = true;
+                    break;
+                }
+            }
+        } while (isOverlapping);
+
+        const newCloud = document.createElement('div');
+        newCloud.className = 'cloud';
+        newCloud.style.left = newX + 'px';
+        newCloud.style.top = newY + 'px';
+        newCloud.style.opacity = 0;
+
+        document.body.appendChild(newCloud);
+        clouds.push(newCloud);
+
+        let opacity = 0;
+        const fadeIn = () => {
+            opacity += 0.02;
+            newCloud.style.opacity = opacity;
+            if (opacity < 1) {
+                requestAnimationFrame(fadeIn);
+            }
+        };
+
+        fadeIn();
+
+        setupCloudDrag(newCloud);
+        setupCloudClick(newCloud);
+    }
+
+    function initClouds() {
+        for (let i = 0; i < 3; i++) {
+            createNewCloud();
+        }
+    }
+
+    initClouds();
+</script>
+</body>
+</html>
