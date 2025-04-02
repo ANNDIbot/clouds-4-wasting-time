@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,7 @@
             background: linear-gradient(to bottom, #87CEEB, #E0F2F7);
             overflow: hidden;
             font-family: 'Arial', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .cloud {
@@ -19,24 +20,24 @@
             height: 20vw;
             background: radial-gradient(circle at 50% 50%, #fff, #f0f0f0);
             border-radius: 50%;
-            box-shadow: 2vw 1vw 1vw rgba(0, 0, 0, 0.1),
-            -1vw -0.5vw 0.5vw rgba(255, 255, 255, 0.5);
+            box-shadow: 
+                2vw 1vw 1vw rgba(0, 0, 0, 0.1),
+                -1vw -0.5vw 0.5vw rgba(255, 255, 255, 0.5);
             filter: blur(0.5vw);
-            transition: transform 0.3s ease, opacity 1s ease;
+            transition: transform 0.3s ease;
             cursor: grab;
             animation: float 10s ease-in-out infinite;
-            will-change: transform, opacity, filter, border-radius;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            z-index: 1;
         }
 
         @keyframes float {
-            0% {
+            0%, 100% {
                 transform: translateY(0);
             }
             50% {
                 transform: translateY(-1.5vw);
-            }
-            100% {
-                transform: translateY(0);
             }
         }
 
@@ -48,35 +49,43 @@
             font-size: 4vw;
             color: #444;
             opacity: 0;
-            transition: opacity 1s;
+            transition: opacity 0.5s ease;
             pointer-events: none;
+            text-shadow: 0 0 10px rgba(255,255,255,0.8);
+            z-index: 2;
         }
 
         .smoke-effect {
-            animation: smokeEffect 2s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+            animation: smokeDissolve 1.5s ease-out forwards !important;
+            pointer-events: none;
         }
 
-        @keyframes smokeEffect {
+        @keyframes smokeDissolve {
             0% {
                 transform: scale(1);
                 opacity: 1;
                 filter: blur(0.5vw);
-                border-radius: 50%;
+            }
+            50% {
+                transform: scale(1.3) translateY(-20px);
+                opacity: 0.7;
+                filter: blur(1vw);
             }
             100% {
-                transform: scale(2);
+                transform: scale(1.8) translateY(-40px);
                 opacity: 0;
                 filter: blur(2vw);
-                border-radius: 0%;
             }
         }
 
         #clickCount {
             position: absolute;
-            bottom: 10%; /* 从下往上 10% */
-            right: 20%; /* 从右往左 20% */
-            font-size: 3vw; /* 增大一号 */
+            bottom: 5%;
+            right: 10%;
+            font-size: 4vw;
             color: gray;
+            user-select: none;
+            z-index: 2;
         }
     </style>
 </head>
@@ -92,7 +101,7 @@
         "慢一点，再慢一点。",
         "想象思绪正在变成一朵飞浮的云。",
         "没有目标也能存在。",
-        "此刻适合飞着。",
+        "此刻适合飘着。",
         "在这里，没有人催你。",
         "轻轻感受你的呼吸。",
     ];
@@ -115,77 +124,123 @@
             quoteTimeout = setTimeout(() => {
                 quoteElement.style.opacity = 0;
             }, 3000);
-        }, 300);
+        }, 200);
     }
 
     function createCloud(x, y) {
         const cloud = document.createElement('div');
         cloud.className = 'cloud';
-        cloud.style.left = x + 'px';
-        cloud.style.top = y + 'px';
+        cloud.style.left = `${x - 15}px`;
+        cloud.style.top = `${y - 10}px`;
+        
+        const scale = 0.8 + Math.random() * 0.4;
+        cloud.style.transform = `scale(${scale})`;
 
         setupCloudDrag(cloud);
         setupCloudClick(cloud);
 
         document.body.appendChild(cloud);
         clouds.push(cloud);
+        return cloud;
     }
 
     function setupCloudDrag(cloud) {
         let isDragging = false;
         let offsetX, offsetY;
 
-        cloud.addEventListener('mousedown', e => {
+        const startDrag = (clientX, clientY) => {
             isDragging = true;
-            offsetX = e.offsetX;
-            offsetY = e.offsetY;
-        });
+            const rect = cloud.getBoundingClientRect();
+            offsetX = clientX - rect.left;
+            offsetY = clientY - rect.top;
+            cloud.style.cursor = 'grabbing';
+            cloud.style.animation = 'none';
+            cloud.style.zIndex = 3;
+        };
 
-        document.addEventListener('mousemove', e => {
+        const moveDrag = (clientX, clientY) => {
             if (isDragging) {
-                const newX = Math.min(window.innerWidth - 160, Math.max(0, e.pageX - offsetX));
-                const newY = Math.min(window.innerHeight - 100, Math.max(0, e.pageY - offsetY));
+                const newX = Math.min(window.innerWidth - 160, Math.max(0, clientX - offsetX));
+                const newY = Math.min(window.innerHeight - 100, Math.max(0, clientY - offsetY));
                 cloud.style.left = newX + 'px';
                 cloud.style.top = newY + 'px';
             }
-        });
+        };
 
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
+        const endDrag = () => {
+            if (isDragging) {
+                isDragging = false;
+                cloud.style.cursor = 'grab';
+                cloud.style.animation = 'float 10s ease-in-out infinite';
+                cloud.style.zIndex = 1;
+            }
+        };
+
+        cloud.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
+        document.addEventListener('mousemove', (e) => moveDrag(e.clientX, e.clientY));
+        document.addEventListener('mouseup', endDrag);
+
+        cloud.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startDrag(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+        
+        document.addEventListener('touchend', endDrag);
     }
 
     function setupCloudClick(cloud) {
-        cloud.addEventListener('click', () => {
+        const handleClick = (e) => {
+            e.stopPropagation(); // 防止事件冒泡
+            
+            if (cloud.dataset.animating === 'true') return;
+            cloud.dataset.animating = 'true';
+            
+            // 强制重置动画
+            cloud.style.animation = 'none';
+            void cloud.offsetWidth; // 触发重绘
             cloud.classList.add('smoke-effect');
-            navigator.vibrate && navigator.vibrate(50);
+            
+            if (navigator.vibrate) navigator.vibrate(30);
 
             let randomQuote;
             do {
                 randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-            } while (displayedQuotes.includes(randomQuote));
+            } while (displayedQuotes.includes(randomQuote) && displayedQuotes.length < quotes.length);
 
             showQuoteText(randomQuote);
             displayedQuotes.push(randomQuote);
 
             if (displayedQuotes.length >= 3) {
-                displayedQuotes.length = 0;
+                displayedQuotes.shift();
             }
 
-            createNewCloud();
+            // 创建新云朵
+            setTimeout(createNewCloud, 300);
 
-            cloud.addEventListener('animationend', () => {
+            // 动画结束后移除
+            const removeCloud = () => {
                 cloud.remove();
-                clouds.splice(clouds.indexOf(cloud), 1);
-            });
+                const index = clouds.indexOf(cloud);
+                if (index > -1) clouds.splice(index, 1);
+            };
+            
+            // 双重保险：动画结束和超时移除
+            cloud.addEventListener('animationend', removeCloud, { once: true });
+            setTimeout(removeCloud, 2000); // 最大等待时间
+        };
 
-            clickCount++;
-            clickCountElement.innerText = `已点击云朵：${clickCount}次`;
-            localStorage.setItem('clickCount', clickCount);
-        });
+        cloud.addEventListener('click', handleClick);
+        cloud.addEventListener('touchend', handleClick);
     }
 
     function createNewCloud() {
+        const maxAttempts = 100;
+        let attempts = 0;
         let newX, newY;
         let isOverlapping;
 
@@ -195,45 +250,65 @@
             isOverlapping = false;
 
             for (const cloud of clouds) {
+                if (!cloud.isConnected) continue;
+                
                 const rect1 = { left: newX, top: newY, width: 150, height: 100 };
                 const rect2 = cloud.getBoundingClientRect();
 
-                if (rect1.left < rect2.right && rect1.left + rect1.width > rect2.left &&
-                    rect1.top < rect2.bottom && rect1.top + rect1.height > rect2.top) {
+                if (rect1.left < rect2.right && 
+                    rect1.left + rect1.width > rect2.left &&
+                    rect1.top < rect2.bottom && 
+                    rect1.top + rect1.height > rect2.top) {
                     isOverlapping = true;
                     break;
                 }
             }
+            
+            if (++attempts >= maxAttempts) {
+                newX = attempts % 2 === 0 ? 20 : window.innerWidth - 180;
+                newY = attempts % 3 === 0 ? 20 : window.innerHeight - 120;
+                break;
+            }
         } while (isOverlapping);
 
-        const newCloud = document.createElement('div');
-        newCloud.className = 'cloud';
-        newCloud.style.left = newX + 'px';
-        newCloud.style.top = newY + 'px';
-        newCloud.style.opacity = 0;
-
-        document.body.appendChild(newCloud);
-        clouds.push(newCloud);
-
+        const newCloud = createCloud(newX, newY);
+        newCloud.style.opacity = '0';
+        
         let opacity = 0;
         const fadeIn = () => {
-            opacity += 0.02;
+            opacity += 0.05;
             newCloud.style.opacity = opacity;
             if (opacity < 1) {
                 requestAnimationFrame(fadeIn);
             }
         };
-
-        fadeIn();
-
-        setupCloudDrag(newCloud);
-        setupCloudClick(newCloud);
+        requestAnimationFrame(fadeIn);
     }
 
     function initClouds() {
-        for (let i = 0; i < 3; i++) {
-            createNewCloud();
-        }
+        // 初始创建3个不重叠的云朵
+        const positions = [
+            { x: window.innerWidth * 0.2, y: window.innerHeight * 0.3 },
+            { x: window.innerWidth * 0.6, y: window.innerHeight * 0.5 },
+            { x: window.innerWidth * 0.4, y: window.innerHeight * 0.7 }
+        ];
+        
+        positions.forEach(pos => {
+            createCloud(pos.x, pos.y);
+        });
+        
+        // 点击空白处创建新云朵
+        document.addEventListener('click', (e) => {
+            if (e.target === document.body) {
+                createCloud(e.clientX, e.clientY);
+            }
+        });
+        
+        document.addEventListener('touchend', (e) => {
+            if (e.target === document.body && e.changedTouches) {
+                createCloud(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+            }
+        });
     }
 
     initClouds();
