@@ -13,28 +13,6 @@
             font-family: 'Arial', sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
-        .cloud {
-            position: absolute;
-            width: 135px;
-            height: 90px;
-            background: radial-gradient(circle at 40% 40%, #E9FFFF, #FFFFFF);
-            background-size: 100% 100%;
-            filter: blur(0.5vw);
-            transition: transform 0.3s ease;
-            cursor: grab;
-            animation: float 10s ease-in-out infinite;
-            z-index: 1;
-            border-radius: 50%;
-            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1), -5px -5px 15px rgba(255, 255, 255, 0.7);
-        }
-        @keyframes float {
-            0%, 100% {
-                transform: translateY(0);
-            }
-            50% {
-                transform: translateY(-1.5vw);
-            }
-        }
         .quote {
             position: absolute;
             top: 10%;
@@ -126,12 +104,20 @@
             }, 200);
         }
         function createCloud(x, y) {
-            const cloud = document.createElement('div');
-            cloud.className = 'cloud';
+            const cloud = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            cloud.setAttribute('width', '135');
+            cloud.setAttribute('height', '90');
+            cloud.style.position = 'absolute';
             cloud.style.left = `${x - 67.5}px`;
             cloud.style.top = `${y - 45}px`;
-            const scale = 0.8 + Math.random() * 0.4;
-            cloud.style.transform = `scale(${scale})`;
+            cloud.style.cursor = 'grab';
+            cloud.style.zIndex = '1';
+            cloud.innerHTML = `
+                <svg width="135" height="90" viewBox="0 0 389 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1.00009 93C1.00012 52 71.0001 48 101 48C142.667 40 138 9.00002 189 9.00002C224 9.00002 261.304 -30 320 60C331.739 78 375 68 388 114C393.871 134.773 293 171 236 151C224 165 96.0001 161 96.0001 141C96.0001 128 1.00006 134 1.00009 93Z" stroke="white"/>
+                    <animate attributeName="transform" attributeType="XML" from="translateY(0)" to="translateY(-1.5vw)" dur="10s" repeatCount="indefinite" />
+                </svg>
+            `;
             setupCloudDrag(cloud);
             setupCloudClick(cloud);
             document.body.appendChild(cloud);
@@ -148,7 +134,7 @@
                 offsetY = clientY - rect.top;
                 cloud.style.cursor = 'grabbing';
                 cloud.style.animation = 'none';
-                cloud.style.zIndex = 3;
+                cloud.style.zIndex = '3';
             };
             const moveDrag = (clientX, clientY) => {
                 if (isDragging) {
@@ -163,7 +149,7 @@
                     isDragging = false;
                     cloud.style.cursor = 'grab';
                     cloud.style.animation = 'float 10s ease-in-out infinite';
-                    cloud.style.zIndex = 1;
+                    cloud.style.zIndex = '1';
                 }
             };
             cloud.addEventListener('mousedown', (e) => startDrag(e.clientX, e.clientY));
